@@ -43,6 +43,7 @@ plot(Baltimore25[,"year"],Baltimore25[,"Emissions"],xaxt="n",
     axis(side=1,at=c(1999,2002,2005,2008), 
          labels=c(1999,2002,2005,2008))
     title(main="PM2.5 Emissions in Baltimore")
+dev.off()
 
 ##PLOT3
 
@@ -53,9 +54,24 @@ plot(Baltimore25[,"year"],Baltimore25[,"Emissions"],xaxt="n",
 #Use the ggplot2 plotting system to make a plot answer this question.
 
 #Load the required packages
-require(ggplot2)
+require("ggplot2")
+require("plyr")
 
-Baltimore25<-NEI[NEI[,"fips"]=="24510",]
-Baltimore25<-aggregate(Emissions~type,data=Baltimore25,FUN=sum)
+Baltimore25<-NEI[NEI[,"fips"]=="24510",c("Emissions","type","year")]
+Baltimore25[,"type"]<-as.factor(Baltimore25[,"type"])
+Baltimore25[,"year"]<-as.factor(Baltimore25[,"year"])
 
-?ggplot2
+Baltimore26 <- ddply(Baltimore25, c("type", "year"), summarise,
+               mean = mean(Emissions))
+
+png("Plot3.png")
+p <- ggplot(Baltimore26, aes(x = year, y = mean, color = type))
+p + geom_line(aes(group=type))
+dev.off()
+
+#Across the United States, how have emissions from coal combustion-related 
+#sources changed from 1999–2008?
+
+
+
+# Getting all the combustion in coal with grep
