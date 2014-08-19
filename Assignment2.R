@@ -72,6 +72,6 @@ dev.off()
 #Across the United States, how have emissions from coal combustion-related 
 #sources changed from 1999–2008?
 
-
-
-# Getting all the combustion in coal with grep
+# Getting all the coal-combustion sources with grep from SCC dataframe
+Coal<-grep("Coal",SCC[,"Short.Name"])
+CombustionCoal<-grep("Comb",SCC[Coal,"Short.Name"])
