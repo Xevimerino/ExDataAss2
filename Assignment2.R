@@ -74,4 +74,7 @@ dev.off()
 
 # Getting all the coal-combustion sources with grep from SCC dataframe
 Coal<-grep("Coal",SCC[,"Short.Name"])
-CombustionCoal<-grep("Comb",SCC[Coal,"Short.Name"])
+CombCoal<-grep("Comb",SCC[Coal,"Short.Name"])
+SCC[CombCoal,"Short.Name"]
+#Needs revision not all the names seem correct
+
