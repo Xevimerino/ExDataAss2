@@ -73,8 +73,26 @@ dev.off()
 #sources changed from 1999–2008?
 
 # Getting all the coal-combustion sources with grep from SCC dataframe
-Coal<-grep("Coal",SCC[,"Short.Name"])
-CombCoal<-grep("Comb",SCC[Coal,"Short.Name"])
-SCC[CombCoal,"Short.Name"]
-#Needs revision not all the names seem correct
+Coal<-grep("Coal",SCC[,"Short.Name"],fixed=T,useBytes=T)
+CombCoal<-grep("Comb",SCC[,"Short.Name"],fixed=T,useBytes=T)
+SCCCoalComb<-SCC[which(CombCoal %in% Coal),"SCC"]
+NEICoalComb<-which(NEI[,"SCC"]%in%SCCCoalComb)
+NEICC<-NEI[NEICoalComb,]
+
+#Summarising by mean
+NEICCSum <- ddply(NEICC, c("year"), summarise,
+                     mean = mean(Emissions))
+head(NEICCSum)
+
+#Inspect this. Why there aren't 91 different SCC codes?
+unique(NEICC[,"SCC"])
+
+#It maybe should be sorted by source?
+png("Plot4.png")
+plot(NEICCSum[,"year"],NEICCSum[,"mean"],
+     t="l",ylab="Tons of PM2.5",xlab="Year",xaxt="n")
+axis(side=1,at=c(1999,2002,2005,2008), 
+     labels=c(1999,2002,2005,2008))
+title(main="Coal Combustion Emissions in the USA")
+dev.off()
 
