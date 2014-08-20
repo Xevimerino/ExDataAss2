@@ -38,7 +38,7 @@ Baltimore25byYear<-aggregate(Emissions~year,data=Baltimore25,FUN=sum)
 
 #Plot itself correcting the X-axis to only show the relevant years
 png("Plot2.png")
-plot(Baltimore25[,"year"],Baltimore25[,"Emissions"],xaxt="n",
+plot(Baltimore25byYear[,"year"],Baltimore25byYear[,"Emissions"],xaxt="n",
      t="l",ylab="Tons of PM2.5",xlab="Year")
     axis(side=1,at=c(1999,2002,2005,2008), 
          labels=c(1999,2002,2005,2008))
@@ -69,8 +69,13 @@ p <- ggplot(Baltimore26, aes(x = year, y = mean, color = type))
 p + geom_line(aes(group=type))
 dev.off()
 
+##PLOT4
+
 #Across the United States, how have emissions from coal combustion-related 
 #sources changed from 1999–2008?
+
+#Load the required packages
+require("plyr")
 
 # Getting all the coal-combustion sources with grep from SCC dataframe
 Coal<-grep("Coal",SCC[,"Short.Name"],fixed=T,useBytes=T)
@@ -82,7 +87,6 @@ NEICC<-NEI[NEICoalComb,]
 #Summarising by mean
 NEICCSum <- ddply(NEICC, c("year"), summarise,
                      mean = mean(Emissions))
-head(NEICCSum)
 
 #Inspect this. Why there aren't 91 different SCC codes?
 unique(NEICC[,"SCC"])
@@ -96,3 +100,64 @@ axis(side=1,at=c(1999,2002,2005,2008),
 title(main="Coal Combustion Emissions in the USA")
 dev.off()
 
+##PLOT5
+
+#How have emissions from motor vehicle sources 
+#changed from 1999–2008 in Baltimore City(fips == "24510")?
+
+#Load the required packages
+require("plyr")
+
+#Selecting the city of Baltimore
+Baltimore25<-NEI[NEI[,"fips"]=="24510",]
+
+#Selecting motor vehicle sources
+Vehicle<-grep("Vehicle",SCC[,"Short.Name"],fixed=T,useBytes=T)
+SCCVehicle<-SCC[Vehicle,"SCC"]
+NEIVehicle<-which(Baltimore25[,"SCC"]%in%SCCVehicle)
+NEIBV<-Baltimore25[NEIVehicle,]
+
+#Summarising by mean
+NEIBVSum <- ddply(NEIBV, c("year"), summarise,
+                  mean = mean(Emissions))
+
+png("Plot5.png")
+plot(NEIBVSum[,"year"],NEIBVSum[,"mean"],
+     t="l",ylab="Tons of PM2.5",xlab="Year",xaxt="n")
+axis(side=1,at=c(1999,2002,2005,2008), 
+     labels=c(1999,2002,2005,2008))
+title(main="Vehicle emissions in Baltimore")
+dev.off()
+
+##PLOT6
+
+#Compare emissions from motor vehicle sources in Baltimore City with 
+#emissions from motor vehicle sources in Los Angeles County, California 
+#(fips == "06037"). Which city has seen greater changes over time in motor
+#vehicle emissions?
+
+#Load the required packages
+require("plyr")
+require("ggplot2")
+
+#Selecting the city of Baltimore
+Baltimore25<-NEI[NEI[,"fips"]=="24510",]
+Baltimore25[,"city"]<-"Baltimore"
+LA25<-NEI[NEI[,"fips"]=="06037",]
+LA25[,"city"]<-'Los Angeles'
+BaltvsLA<-rbind(Baltimore25,LA25)
+
+#Selecting motor vehicle sources
+Vehicle<-grep('Vehicle',SCC[,"Short.Name"],fixed=T,useBytes=T)
+SCCVehicle<-SCC[Vehicle,"SCC"]
+NEIVehicle<-which(BaltvsLA[,"SCC"]%in%SCCVehicle)
+NEIBvsLA<-BaltvsLA[NEIVehicle,]
+
+#Summarising by mean
+NEIBvsLASum <- ddply(NEIBvsLA, c("year","city"), summarise,
+                  mean = mean(Emissions))
+
+png("Plot6.png")
+p <- ggplot(NEIBvsLASum, aes(x = year, y = mean, color = city))
+p + geom_line(aes(group=city))
+dev.off()
