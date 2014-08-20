@@ -1,0 +1,40 @@
+dir.create("./Data")
+download.file("https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip", "./Data/FNEI_data.zip")
+download.date<-Sys.time()
+unzip("./data/FNEI_data.zip",exdir="./Data")
+NEI <- readRDS("./Data/summarySCC_PM25.rds")
+SCC <- readRDS("./Data/Source_Classification_Code.rds")
+
+#Is any data missing in this database?
+nrow(NEI[is.na(NEI)])
+
+##PLOT4
+
+#Across the United States, how have emissions from coal combustion-related 
+#sources changed from 1999–2008?
+
+#Load the required packages
+require("plyr")
+
+# Getting all the coal-combustion sources with grep from SCC dataframe
+Coal<-grep("Coal",SCC[,"Short.Name"],fixed=T,useBytes=T)
+CombCoal<-grep("Comb",SCC[,"Short.Name"],fixed=T,useBytes=T)
+SCCCoalComb<-SCC[which(CombCoal %in% Coal),"SCC"]
+NEICoalComb<-which(NEI[,"SCC"]%in%SCCCoalComb)
+NEICC<-NEI[NEICoalComb,]
+
+#Summarising by mean
+NEICCSum <- ddply(NEICC, c("year"), summarise,
+                     sum = sum(Emissions))
+
+#Inspect this. Why there aren't 91 different SCC codes?
+unique(NEICC[,"SCC"])
+
+#It maybe should be sorted by source?
+png("Plot4.png")
+plot(NEICCSum[,"year"],NEICCSum[,"sum"],
+     t="l",ylab="Tons of PM2.5",xlab="Year",xaxt="n")
+axis(side=1,at=c(1999,2002,2005,2008), 
+     labels=c(1999,2002,2005,2008))
+title(main="Coal Combustion Emissions in the USA")
+dev.off()

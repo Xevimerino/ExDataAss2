@@ -45,6 +45,16 @@ plot(Baltimore25byYear[,"year"],Baltimore25byYear[,"Emissions"],xaxt="n",
     title(main="PM2.5 Emissions in Baltimore")
 dev.off()
 
+dir.create("./Data")
+download.file("https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip", "./Data/FNEI_data.zip")
+download.date<-Sys.time()
+unzip("./data/FNEI_data.zip",exdir="./Data")
+NEI <- readRDS("./Data/summarySCC_PM25.rds")
+SCC <- readRDS("./Data/Source_Classification_Code.rds")
+
+#Is any data missing in this database?
+nrow(NEI[is.na(NEI)])
+
 ##PLOT3
 
 #Of the four types of sources indicated by the type (point, nonpoint, onroad, 
@@ -62,10 +72,10 @@ Baltimore25[,"type"]<-as.factor(Baltimore25[,"type"])
 Baltimore25[,"year"]<-as.factor(Baltimore25[,"year"])
 
 Baltimore26 <- ddply(Baltimore25, c("type", "year"), summarise,
-               mean = mean(Emissions))
+                     PM25Tons = sum(Emissions))
 
 png("Plot3.png")
-p <- ggplot(Baltimore26, aes(x = year, y = mean, color = type))
+p <- ggplot(Baltimore26, aes(x = year, y = PM25Tons, color = type))
 p + geom_line(aes(group=type))
 dev.off()
 
@@ -86,14 +96,14 @@ NEICC<-NEI[NEICoalComb,]
 
 #Summarising by mean
 NEICCSum <- ddply(NEICC, c("year"), summarise,
-                     mean = mean(Emissions))
+                  sum = sum(Emissions))
 
 #Inspect this. Why there aren't 91 different SCC codes?
 unique(NEICC[,"SCC"])
 
 #It maybe should be sorted by source?
 png("Plot4.png")
-plot(NEICCSum[,"year"],NEICCSum[,"mean"],
+plot(NEICCSum[,"year"],NEICCSum[,"sum"],
      t="l",ylab="Tons of PM2.5",xlab="Year",xaxt="n")
 axis(side=1,at=c(1999,2002,2005,2008), 
      labels=c(1999,2002,2005,2008))
@@ -119,10 +129,10 @@ NEIBV<-Baltimore25[NEIVehicle,]
 
 #Summarising by mean
 NEIBVSum <- ddply(NEIBV, c("year"), summarise,
-                  mean = mean(Emissions))
+                  sum = sum(Emissions))
 
 png("Plot5.png")
-plot(NEIBVSum[,"year"],NEIBVSum[,"mean"],
+plot(NEIBVSum[,"year"],NEIBVSum[,"sum"],
      t="l",ylab="Tons of PM2.5",xlab="Year",xaxt="n")
 axis(side=1,at=c(1999,2002,2005,2008), 
      labels=c(1999,2002,2005,2008))
@@ -142,9 +152,9 @@ require("ggplot2")
 
 #Selecting the city of Baltimore
 Baltimore25<-NEI[NEI[,"fips"]=="24510",]
-Baltimore25[,"city"]<-"Baltimore"
+Baltimore25[,"location"]<-"Baltimore City"
 LA25<-NEI[NEI[,"fips"]=="06037",]
-LA25[,"city"]<-'Los Angeles'
+LA25[,"location"]<-'Los Angeles County'
 BaltvsLA<-rbind(Baltimore25,LA25)
 
 #Selecting motor vehicle sources
@@ -154,10 +164,10 @@ NEIVehicle<-which(BaltvsLA[,"SCC"]%in%SCCVehicle)
 NEIBvsLA<-BaltvsLA[NEIVehicle,]
 
 #Summarising by mean
-NEIBvsLASum <- ddply(NEIBvsLA, c("year","city"), summarise,
-                  mean = mean(Emissions))
+NEIBvsLASum <- ddply(NEIBvsLA, c("year","location"), summarise,
+                     PM25Tons = sum(Emissions))
 
 png("Plot6.png")
-p <- ggplot(NEIBvsLASum, aes(x = year, y = mean, color = city))
-p + geom_line(aes(group=city))
+p <- ggplot(NEIBvsLASum, aes(x = year, y = PM25Tons, color = location))
+p + geom_line(aes(group=location))
 dev.off()

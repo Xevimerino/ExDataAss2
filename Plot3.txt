@@ -1,0 +1,33 @@
+dir.create("./Data")
+download.file("https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2FNEI_data.zip", "./Data/FNEI_data.zip")
+download.date<-Sys.time()
+unzip("./data/FNEI_data.zip",exdir="./Data")
+NEI <- readRDS("./Data/summarySCC_PM25.rds")
+SCC <- readRDS("./Data/Source_Classification_Code.rds")
+
+#Is any data missing in this database?
+nrow(NEI[is.na(NEI)])
+
+##PLOT3
+
+#Of the four types of sources indicated by the type (point, nonpoint, onroad, 
+#nonroad) variable, which of these four sources have seen decreases in emissions
+#from 1999–2008 for Baltimore City? 
+#Which have seen increases in emissions from 1999–2008? 
+#Use the ggplot2 plotting system to make a plot answer this question.
+
+#Load the required packages
+require("ggplot2")
+require("plyr")
+
+Baltimore25<-NEI[NEI[,"fips"]=="24510",c("Emissions","type","year")]
+Baltimore25[,"type"]<-as.factor(Baltimore25[,"type"])
+Baltimore25[,"year"]<-as.factor(Baltimore25[,"year"])
+
+Baltimore26 <- ddply(Baltimore25, c("type", "year"), summarise,
+               PM25Tons = sum(Emissions))
+
+png("Plot3.png")
+p <- ggplot(Baltimore26, aes(x = year, y = PM25Tons, color = type))
+p + geom_line(aes(group=type))
+dev.off()
